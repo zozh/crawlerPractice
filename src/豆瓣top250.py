@@ -2,13 +2,10 @@
 import os
 import random
 import time
-# import sqlite3
 import datetime
 import requests
 from urllib import error
 from bs4 import BeautifulSoup
-
-
 
 
 def ua_info():
