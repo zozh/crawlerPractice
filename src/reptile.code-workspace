@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+    ],
+    "settings": {
+        "editor.formatOnSave": true, // 保存后自动格式化
+        "beautify.language": {
+        "js": {
+            "type": [
+        "javascript",
+        "json"
+      ],
+      "filename": [  // 可以在项目中单独添加配置文件
+        ".jshintrc",
+        ".jsbeautify"
+      ]
+    },
+    "html": [
+      "html",
+      "vue" 
+    ]
+  }
+    }
+}
