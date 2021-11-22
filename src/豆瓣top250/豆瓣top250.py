@@ -8,32 +8,9 @@ import queue
 import random
 import pymongo
 import requests
-# import crawlerGet
 import threading
 import configuration
 from bs4 import BeautifulSoup
-# from library import directory, only_name
-# from concurrent.futures import ThreadPoolExecutor
-
-# def get_html_obj(url: str) -> str:
-#     # 测试http网站 httpbin.org
-#     # 构建headers，模拟真实浏览器，防418
-#     # 同一ip多次爬虫,会超时
-#     headers = {'user-agent': ua_info()}
-#     try:
-#         html_obj = requests.get(url=url, headers=headers, timeout=3)
-#     except requests.exceptions.ConnectionError as e:
-#         print('Error', e.args)
-#     return html_obj
-
-# def get_html(url: str):
-#     """返回html文本，utf8格式。
-
-#     Args:
-#         url (str): html url
-#     """
-#     html_obj = get_html_obj(url)
-#     return html_obj.text
 
 
 def get_ua():
@@ -72,6 +49,12 @@ def get_ip():
 
 
 def do_crawler(urls: queue.Queue, html_queue: queue.Queue):
+    """获取源码
+
+    Args:
+        urls (queue.Queue):url队列
+        html_queue (queue.Queue): html源码队列
+    """
     while True:
         url = urls.get()
         proxies = get_ip()
@@ -88,6 +71,11 @@ def do_crawler(urls: queue.Queue, html_queue: queue.Queue):
 
 
 def do_parse(html_queue: queue.Queue):
+    """解析
+
+    Args:
+        html_queue (queue.Queue):html源码队列
+    """
     while True:
         html_doc = html_queue.get()
         soup = BeautifulSoup(html_doc, 'lxml')
@@ -119,80 +107,26 @@ def do_parse(html_queue: queue.Queue):
             except:
                 data["inq"] = "..."
                 data["each"] = str(each)
-                # data["find"] = each.find("span", class_="inq")
-                print(data["serialNum"])
-                print("***********")
-                print(each)
-                print("***********")
+                # print(data["serialNum"])
             # 导演 主演
             text = each.find("div", class_="bd").p
             text_list = list()
             for txt in text.strings:
                 txt = re.sub('\s', ' ', txt)
                 text_list.append(txt)
-            print(text_list)
-            print("============")
             try:
-                temp = re.findall("导演:(.*)(主演:|主)(.*)", str(text_list[0]))
-                print(temp)
-                print("============")
-                major_text = list(temp)[0]
-                data["director"] = major_text[0].strip()
+                major_text = list(
+                    re.findall("导演:(.*)(主演:|主)(.*)", str(text_list[0])))[0]
                 data["starring"] = major_text[2].strip()
             except:
-                temp = re.findall("导演:(.*)", str(text_list[0]))
-                print(temp)
-                print("============")
-                major_text = list(temp)[0]
-                data["director"] = major_text[0].strip()
+                major_text = list(re.findall("导演:(.*)", str(text_list[0])))[0]
                 data["starring"] = "..."
-            # print(temp)
-            # print("============")
-            # major_text = list(temp)[0]
-            # print(major_text)
-            # print("============")
-            # data["director"] = major_text[0].strip()
-            # data["starring"] = major_text[2].strip()
+            data["director"] = major_text[0].strip()
             # 时间 地点 类型
             other_text = re.findall("(.*)/(.*)/(.*)", str(text_list[1]))[0]
-            print(other_text)
-            print("============")
             data["year"] = other_text[0]
             data["countries"] = other_text[1].strip()
             data["film_type"] = other_text[2].strip()
-            # print(data)
-            # text = each.find("div", class_="bd").p.string
-            # # print(text)
-            # text = re.findall("导演:(.*)(主演:|主)(.*)\n", text)
-            # # 详情页面获取导演主演
-            # # time.sleep(1)
-            # # html_doc = get_html(data["details"])
-            # # soup = BeautifulSoup(html_doc, 'lxml')
-            # # # 导演
-            # # director = soup.select("#info > span:nth-child(1) > span.attrs")[0]
-            # # director_list = list()
-            # # for director_each in director.contents:
-            # #     if isinstance(director_each, bs4.element.Tag):
-            # #         director_list.append(director_each.string)
-            # # # 主演
-            # # starring = soup.select("#info > span.actor > span.attrs")[0]
-            # # starring_list = list()
-            # # for starring_each in starring.contents:
-            # #     if isinstance(starring_each, bs4.element.Tag):
-            # #         starring_list.append(starring_each.string)
-            # data["director"] = text[0]
-            # data["starring"] = text[1]
-            # # 时间 地点 类型
-            # data["year"] = re.findall("\d{4}", text)[0]
-            # text = ''.join(text.split())
-            # text = text.split("/")
-            # data["countries"] = text[-2]
-            # data["film_type"] = text[-1]
-            # 保存数据
-            # mongoDB数据库,批量操作性能优于频繁操作,可以列表先存着一次解决.
-            # 如果全部都拷贝给一个列表保存,那么必须使用深拷贝,但使用深拷贝会栈溢出
-            # data_temp = copy.deepcopy(data)
-            # sql_data_list.append(data_temp)
             mongoDB(data)
 
 
@@ -217,7 +151,6 @@ def mongoDB(sql_data: list):
 # TODO 测试
 # 获取TOP 250 图片 序号 导演 主演 标题 详情 评分 打分人数 简介 时间 地点 类型
 if __name__ == '__main__':
-    # data_parse()
     url_list = [
         f"https://movie.douban.com/top250?start={page}"
         for page in range(0, 275, 25)
