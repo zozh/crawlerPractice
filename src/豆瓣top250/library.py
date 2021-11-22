@@ -31,6 +31,19 @@ def only_name():
     return now_time + random_code
 
 
+def save_json(data: dict, name: str):
+    """字典数据保存到本地,并存数据库
+
+    Args:
+        sql_data (list): 数据字典
+    """
+    with open(r'src\豆瓣top250\json\a' + name + '.json', 'w',
+              encoding='utf-8') as f:
+        # 设置不转换成ascii  json字符串首缩进
+        json_data = json.dumps(data, ensure_ascii=False, indent=2)
+        f.write(json_data)
+
+
 def print_file(item: object):
     """打印输出到文件
     """
