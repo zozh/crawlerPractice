@@ -1,9 +1,10 @@
 # coding: utf8
-# import os
 import re
+
 import bs4
+import redis
 import time
-# import json
+import json
 import queue
 import random
 import pymongo
@@ -34,6 +35,7 @@ def get_ua():
 def get_ip():
     """获取快代理ip
     """
+    # 新建configuration，放入你的api_url username password
     api_url = configuration.api_url
     proxy_ip = requests.get(api_url).text
     username = configuration.username
@@ -56,6 +58,7 @@ def do_crawler(urls: queue.Queue, html_queue: queue.Queue):
         html_queue (queue.Queue): html源码队列
     """
     while True:
+        # while urls.qsize() > 0:
         url = urls.get()
         proxies = get_ip()
         headers = get_ua()
@@ -76,7 +79,9 @@ def do_parse(html_queue: queue.Queue):
     Args:
         html_queue (queue.Queue):html源码队列
     """
+
     while True:
+        # while urls.qsize() != 0 and html_queue.qsize() != 0:
         html_doc = html_queue.get()
         soup = BeautifulSoup(html_doc, 'lxml')
         items = soup.find_all("div", "item")
@@ -84,7 +89,8 @@ def do_parse(html_queue: queue.Queue):
             data = dict()
             # 图片 序号
             div_pic = each.find("div", class_="pic")
-            data["serialNum"] = div_pic.em.string
+            # 转数字,好检查数据
+            data["serialNum"] = int(div_pic.em.string)
             data["photo"] = div_pic.img.get("src")
             # 标题 详情
             div_title = each.find("div", class_="hd")
@@ -106,12 +112,13 @@ def do_parse(html_queue: queue.Queue):
                 data["inq"] = each.find("span", class_="inq").string
             except:
                 data["inq"] = "..."
-                data["each"] = str(each)
+                # data["each"] = str(each)
                 # print(data["serialNum"])
             # 导演 主演
             text = each.find("div", class_="bd").p
             text_list = list()
             for txt in text.strings:
+                # 去除特殊符号
                 txt = re.sub('\s', ' ', txt)
                 text_list.append(txt)
             try:
@@ -124,13 +131,39 @@ def do_parse(html_queue: queue.Queue):
             data["director"] = major_text[0].strip()
             # 时间 地点 类型
             other_text = re.findall("(.*)/(.*)/(.*)", str(text_list[1]))[0]
-            data["year"] = other_text[0]
+            # 去空格
+            data["year"] = re.sub('\s', ' ', other_text[0])
             data["countries"] = other_text[1].strip()
             data["film_type"] = other_text[2].strip()
-            mongoDB(data)
+            # 连接redis
+            r = redis.Redis(host="127.0.0.1",
+                            port=6379,
+                            db=0,
+                            decode_responses=True)
+            # redis 缓存会造成冗余
+            r.lpush("doubanT250", json.dumps(data, ensure_ascii=False))
+        # 去除数据存mongoDB
+        data_list = r.lrange("doubanT250", 0, -1)
+        data_list = list(map(lambda each: json.loads(each), data_list))
+        mongoDB(data_list)
+        r.delete("doubanT250")
+        data_list.clear()
 
 
-def mongoDB(sql_data: list):
+def save_json(data: dict, name: str):
+    """字典数据保存到本地,并存数据库
+
+    Args:
+        sql_data (list): 数据字典
+    """
+    with open(r'src\豆瓣top250\json\a' + name + '.json', 'a',
+              encoding='utf-8') as f:
+        # 设置不转换成ascii  json字符串首缩进
+        json_data = json.dumps(data, ensure_ascii=False, indent=2)
+        f.write(json_data)
+
+
+def mongoDB(data: list):
     """数据保存到mongoDB
 
     Args:
@@ -139,12 +172,15 @@ def mongoDB(sql_data: list):
     #1.连接本地数据库服务
     connection = pymongo.MongoClient('localhost')
     database = 'crawler'
-    collection = 'doubanT250'
+    collection = 'try'
     #2.连接本地数据库 demo。没有会创建
     db = connection[database]
     #3.创建集合
     emp = db[collection]
-    emp.insert_one(sql_data)
+    try:
+        emp.insert_many(data)
+    except:
+        print(data)
     connection.close()
 
 
