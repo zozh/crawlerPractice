@@ -10,7 +10,7 @@ import random
 import pymongo
 import requests
 import threading
-import configuration
+import config
 from bs4 import BeautifulSoup
 
 
@@ -36,10 +36,10 @@ def get_ip():
     """获取快代理ip
     """
     # 新建configuration，放入你的api_url username password
-    api_url = configuration.api_url
+    api_url = config.api_url
     proxy_ip = requests.get(api_url).text
-    username = configuration.username
-    password = configuration.password
+    username = config.username
+    password = config.password
     proxies = {
         "http": "http://%(user)s:%(pwd)s@%(proxy)s/" % {
             "user": username,
