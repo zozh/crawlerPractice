@@ -1,6 +1,5 @@
 # coding: utf8
 import re
-
 import bs4
 import redis
 import time
@@ -58,7 +57,6 @@ def do_crawler(urls: queue.Queue, html_queue: queue.Queue):
         html_queue (queue.Queue): html源码队列
     """
     while True:
-        # while urls.qsize() > 0:
         url = urls.get()
         proxies = get_ip()
         headers = get_ua()
@@ -81,7 +79,6 @@ def do_parse(html_queue: queue.Queue):
     """
 
     while True:
-        # while urls.qsize() != 0 and html_queue.qsize() != 0:
         html_doc = html_queue.get()
         soup = BeautifulSoup(html_doc, 'lxml')
         items = soup.find_all("div", "item")
@@ -107,13 +104,10 @@ def do_parse(html_queue: queue.Queue):
             data["star"] = temp_list[0]
             data["starNum"] = temp_list[2]
             # 简介
-
             try:
                 data["inq"] = each.find("span", class_="inq").string
             except:
                 data["inq"] = "..."
-                # data["each"] = str(each)
-                # print(data["serialNum"])
             # 导演 主演
             text = each.find("div", class_="bd").p
             text_list = list()
