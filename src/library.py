@@ -4,6 +4,9 @@ import json
 import random
 import datetime
 from chardet.universaldetector import UniversalDetector
+import requests
+import hadToClimb
+from lxml import etree
 
 
 def directory(path: str):
@@ -17,12 +20,8 @@ def directory(path: str):
     return path
 
 
-def save_sql():
-    pass
-
-
 def save_html(content: str):
-    file_path = os.path.join("project\\html-data\\", only_name() + ".html")
+    file_path = os.path.join("html-data\\", only_name() + ".html")
     with open(file_path, 'w', encoding='utf-8') as file_obj:
         file_obj.write(content)
 
@@ -43,7 +42,7 @@ def save_json(data: dict, name: str):
     with open(r'src\豆瓣top250\json\a' + name + '.json', 'w',
               encoding='utf-8') as f:
         # 设置不转换成ascii  json字符串首缩进
-        json_data = json.dumps(data, ensure_ascii=False, indent=2)
+        json_data = json.dumps(data, ensure_ascii=False, indent=4)
         f.write(json_data)
 
 
@@ -96,3 +95,29 @@ def txt_to_json(file_path: str):
                 save_json = dict(zip(key_list, value_list))
                 json.dump(save_json, file_obj, ensure_ascii=False)
             count += 1
+
+
+def get_data(url: str) -> object:
+    """返回Response对象
+
+    Args:
+        url (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    header = hadToClimb.get_ua()
+    res = requests.get(url=url, headers=header)
+    return res
+
+
+def do_parsing(text: str, xpath: str) -> list:
+    """返回xpath解析结果
+
+    Args:
+        text (str): 目标文本
+        xpath (str): xpath表达式
+    """
+    parsing = etree.HTML(text)
+    li_list = parsing.xpath(xpath)
+    return li_list

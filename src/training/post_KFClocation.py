@@ -12,10 +12,8 @@ import random
 def kfc(data: dict):
     url = 'http://www.kfc.com.cn/kfccda/ashx/GetStoreList.ashx?op=keyword'
     data = data
-    res = requests.post(url=url, headers=hadToClimb.get_ua(), data=data)
-    json_data = json.loads(res.text)
-    print(json_data)
-    return json_data
+    res = requests.post(url=url, headers=hadToClimb.get_ua(), data=data).json()
+    return res
 
 
 keyword = '北京'
