@@ -12,12 +12,16 @@ BOT_NAME = 'recruitment'
 SPIDER_MODULES = ['recruitment.spiders']
 NEWSPIDER_MODULE = 'recruitment.spiders'
 
+USER_AGENT = 'Opera/9.20 (Macintosh; Intel Mac OS X; U; en)'
+ROBOTSTXT_OBEY = False
 
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'recruitment (+http://www.yourdomain.com)'
-
+_LEVEL = 'DEBUG'
+LOG_LEVEL = "WARNING"
+ITEM_PIPELINES = {
+    'recruitment.pipelines.RedisPipeLine': 300,
+}
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+# ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32

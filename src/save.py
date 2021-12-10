@@ -3,6 +3,7 @@ import json
 import random
 import datetime
 import pymongo
+import redis
 
 
 class mongoDB:
@@ -29,6 +30,11 @@ class mongoDB:
         """
         #清空所有数据
         self.emp.remove(None)
+
+
+class Redis():
+    def __init__(self, host: str = '127.0.0.1', port: int = 6379, db: int = 0):
+        self.conn = redis.Redis(host, port, db)
 
 
 def directory(path: str):
